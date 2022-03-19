@@ -42,6 +42,15 @@ static long long fib_sequence(long long k)
     return fk;
 }
 
+static long long fib_fast_dob(long long k)
+{
+    /* FIXME: C99 variable-length array (VLA) is not allowed in Linux kernel. */
+
+    // change to fast doubling
+
+    return 1;
+}
+
 static int fib_open(struct inode *inode, struct file *file)
 {
     if (!mutex_trylock(&fib_mutex)) {
@@ -69,10 +78,24 @@ static ssize_t fib_read(struct file *file,
 /* write operation is skipped */
 static ssize_t fib_write(struct file *file,
                          const char *buf,
-                         size_t size,
+                         size_t mode,
                          loff_t *offset)
 {
-    return 1;
+    ktime_t kt;
+
+    switch (mode) {
+    case 0:  // iterative method
+        kt = ktime_get();
+        fib_sequence(*offset);
+        kt = ktime_sub(ktime_get(), kt);
+        break;
+    case 1:  // fast-doubling method
+        kt = ktime_get();
+        fib_fast_dob(*offset);
+        kt = ktime_sub(ktime_get(), kt);
+        break;
+    }
+    return ktime_to_ns(kt);
 }
 
 static loff_t fib_device_lseek(struct file *file, loff_t offset, int orig)
