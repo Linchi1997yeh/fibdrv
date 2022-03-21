@@ -46,7 +46,7 @@ static long long fib_fast_dob(long long n)
     /* FIXME: C99 variable-length array (VLA) is not allowed in Linux kernel. */
 
     // change to fast doubling
-
+    // code from < KYG-yaya573142 >
     if (n < 2) { /* F(0) = 0, F(1) = 1 */
         return n;
     }
@@ -69,7 +69,7 @@ static long long fib_fast_dob(long long n)
             f[1] = k2; /* F(n+1) = F(2k+1) */
         }
     }
-    printk("%lld", f[0]);
+    // printk("%lld", f[0]);
     return f[0];
 }
 
