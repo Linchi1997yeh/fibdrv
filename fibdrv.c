@@ -104,8 +104,6 @@ static ssize_t fib_write(struct file *file,
                          loff_t *offset)
 {
     ktime_t kt;
-    // long long tmp;
-    // printk("%ld", mode);
     switch (mode) {
     case 0:  // iterative method
         kt = ktime_get();
@@ -114,11 +112,10 @@ static ssize_t fib_write(struct file *file,
         break;
     case 1:  // fast-doubling method
         kt = ktime_get();
-        tmp = fib_fast_dob(*offset);
+        fib_fast_dob(*offset);
         kt = ktime_sub(ktime_get(), kt);
         break;
     }
-    // printk("%lld", tmp);
     return (ssize_t) ktime_to_ns(kt);
 }
 
