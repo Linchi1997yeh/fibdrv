@@ -44,4 +44,4 @@ client_test: client_test.c
 	$(CC) -o $@ $^
 
 client_stat_measure: client_stat_measure.c
-	$(CC) -o $@ $^
+	$(CC) -o $@ $^ -lm

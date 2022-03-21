@@ -17,7 +17,7 @@ MODULE_VERSION("0.1");
 /* MAX_LENGTH is set to 92 because
  * ssize_t can't fit the number > 92
  */
-#define MAX_LENGTH 92
+#define MAX_LENGTH 100
 
 static dev_t fib_dev = 0;
 static struct cdev *fib_cdev;
@@ -38,17 +38,39 @@ static long long fib_sequence(long long k)
         fk_2 = fk_1;
         fk_1 = fk;
     }
-
     return fk;
 }
 
-static long long fib_fast_dob(long long k)
+static long long fib_fast_dob(long long n)
 {
     /* FIXME: C99 variable-length array (VLA) is not allowed in Linux kernel. */
 
     // change to fast doubling
 
-    return 1;
+    if (n < 2) { /* F(0) = 0, F(1) = 1 */
+        return n;
+    }
+    long long f[2];
+    unsigned int ndigit = 32 - __builtin_clz(n); /* number of digit in n */
+    f[0] = 0;                                    /* F(k) */
+    f[1] = 1;                                    /* F(k+1) */
+
+    for (unsigned int i = 1U << (ndigit - 1); i;
+         i >>= 1) { /* walk through the digit of n */
+        long long k1 =
+            f[0] * (f[1] * 2 - f[0]); /* F(2k) = F(k) * [ 2 * F(k+1) – F(k) ] */
+        long long k2 =
+            f[0] * f[0] + f[1] * f[1]; /* F(2k+1) = F(k)^2 + F(k+1)^2 */
+        if (n & i) {                   /* current binary digit == 1 */
+            f[0] = k2;                 /* F(n) = F(2k+1) */
+            f[1] = k1 + k2; /* F(n+1) = F(2k+2) =  F(2k) +  F(2k+1) */
+        } else {
+            f[0] = k1; /* F(n) = F(2k) */
+            f[1] = k2; /* F(n+1) = F(2k+1) */
+        }
+    }
+    printk("%lld", f[0]);
+    return f[0];
 }
 
 static int fib_open(struct inode *inode, struct file *file)
@@ -82,7 +104,8 @@ static ssize_t fib_write(struct file *file,
                          loff_t *offset)
 {
     ktime_t kt;
-
+    // long long tmp;
+    // printk("%ld", mode);
     switch (mode) {
     case 0:  // iterative method
         kt = ktime_get();
@@ -91,11 +114,12 @@ static ssize_t fib_write(struct file *file,
         break;
     case 1:  // fast-doubling method
         kt = ktime_get();
-        fib_fast_dob(*offset);
+        tmp = fib_fast_dob(*offset);
         kt = ktime_sub(ktime_get(), kt);
         break;
     }
-    return ktime_to_ns(kt);
+    // printk("%lld", tmp);
+    return (ssize_t) ktime_to_ns(kt);
 }
 
 static loff_t fib_device_lseek(struct file *file, loff_t offset, int orig)

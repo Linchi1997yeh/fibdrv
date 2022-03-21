@@ -23,8 +23,10 @@ sudo bash -c "echo 1 > /sys/devices/system/cpu/intel_pstate/no_turbo"
 make clean
 make
 make client_stat_measure
+make client
 make unload
 make load
+# sudo ./client > out
 sudo taskset -c 7 ./client_stat_measure > plot
 gnuplot scripts/plot-stats.gp
 make unload
