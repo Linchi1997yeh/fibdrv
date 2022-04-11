@@ -13,7 +13,7 @@ int main()
     // char buf[1];
     char write_buf[] = "testing writing";
     int offset = 100; /* TODO: try test something bigger than the limit */
-    int iterations = 5000;
+    int iterations = 10000;
     int fd = open(FIB_DEV, O_RDWR);
     if (fd < 0) {
         perror("Failed to open character device");
@@ -27,16 +27,17 @@ int main()
                res_u = 0.0, sys_cal = 0.0;
         int count_k = 0, count_u = 0;
         for (int j = 0; j < iterations; j++) {
-            long long sz, fz;
+            long long sz;
+            // long long fz;
             struct timespec t_start, t_end;
             clock_gettime(CLOCK_REALTIME, &t_start);
             sz = write(fd, write_buf, 0);
-            fz = write(fd, write_buf, 1);
+            // fz = write(fd, write_buf, 1);
             clock_gettime(CLOCK_REALTIME, &t_end);
             long long dif = t_end.tv_nsec - t_start.tv_nsec;
             kernel_time[j] = sz;
-            user_time[j] = fz;
-            // user_time[j] = dif;
+            // user_time[j] = fz;
+            user_time[j] = dif;
             mean_k += sz;
             mean_u += dif;
             // mean_u += dif;
@@ -50,8 +51,8 @@ int main()
             sd_k += (kernel_time[j] - mean_k) * (kernel_time[j] - mean_k);
             sd_u += (user_time[j] - mean_u) * (user_time[j] - mean_u);
         }
-        sd_k = sqrt(sd_k / iterations);
-        sd_u = sqrt(sd_u / iterations);
+        sd_k = sqrt(sd_k / (iterations - 1));
+        sd_u = sqrt(sd_u / (iterations - 1));
 
 
         // remove outliers
