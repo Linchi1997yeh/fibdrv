@@ -6,6 +6,11 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/mutex.h>
+#include <linux/slab.h>
+#include <linux/string.h>
+
+#include <linux/uaccess.h>  // Required for the copy_to_user()
+#include "bn.h"
 
 MODULE_LICENSE("Dual MIT/GPL");
 MODULE_AUTHOR("National Cheng Kung University, Taiwan");
@@ -17,13 +22,14 @@ MODULE_VERSION("0.1");
 /* MAX_LENGTH is set to 92 because
  * ssize_t can't fit the number > 92
  */
-#define MAX_LENGTH 100
+#define MAX_LENGTH 5000
 
 static dev_t fib_dev = 0;
 static struct cdev *fib_cdev;
 static struct class *fib_class;
 static DEFINE_MUTEX(fib_mutex);
 
+#if 0
 static long long fib_sequence(long long k)
 {
     /* FIXME: C99 variable-length array (VLA) is not allowed in Linux kernel. */
@@ -72,6 +78,7 @@ static long long fib_fast_dob(long long n)
     // printk("%lld", f[0]);
     return f[0];
 }
+#endif
 
 static int fib_open(struct inode *inode, struct file *file)
 {
@@ -82,6 +89,7 @@ static int fib_open(struct inode *inode, struct file *file)
     return 0;
 }
 
+
 static int fib_release(struct inode *inode, struct file *file)
 {
     mutex_unlock(&fib_mutex);
@@ -89,12 +97,47 @@ static int fib_release(struct inode *inode, struct file *file)
 }
 
 /* calculate the fibonacci number at given offset */
+// static ssize_t fib_read(struct file *file,
+//                         char *buf,
+//                         size_t size,
+//                         loff_t *offset)
+// {
+//     return (ssize_t) fib_sequence(*offset);
+// }
+
 static ssize_t fib_read(struct file *file,
                         char *buf,
-                        size_t size,
+                        size_t mode,
                         loff_t *offset)
 {
-    return (ssize_t) fib_sequence(*offset);
+    ktime_t kt;
+    bn res;
+    char str[8 * sizeof(uint32_t) * LENGTH / 3 + 2];
+    int len;
+    s64 time;
+    switch (mode) {
+    case 0:
+        kt = ktime_get();
+        bn_norm_fib(*offset, &res);
+        // s64 time = ktime_to_ns(ktime_sub(ktime_get(), kt));
+        len = bn_to_string(res, str);
+        copy_to_user(buf, str + len,
+                     8 * sizeof(uint32_t) * LENGTH / 3 + 2 - len);
+        time = ktime_to_ns(ktime_sub(ktime_get(), kt));
+        break;
+    case 1:
+
+        kt = ktime_get();
+        bn_fib(*offset, &res);
+        // s64 time = ktime_to_ns(ktime_sub(ktime_get(), kt));
+        len = bn_to_string(res, str);
+        copy_to_user(buf, str + len,
+                     8 * sizeof(uint32_t) * LENGTH / 3 + 2 - len);
+        time = ktime_to_ns(ktime_sub(ktime_get(), kt));
+
+        break;
+    }
+    return time;
 }
 
 /* write operation is skipped */
@@ -103,20 +146,21 @@ static ssize_t fib_write(struct file *file,
                          size_t mode,
                          loff_t *offset)
 {
-    ktime_t kt;
-    switch (mode) {
-    case 0:  // iterative method
-        kt = ktime_get();
-        fib_sequence(*offset);
-        kt = ktime_sub(ktime_get(), kt);
-        break;
-    case 1:  // fast-doubling method
-        kt = ktime_get();
-        fib_fast_dob(*offset);
-        kt = ktime_sub(ktime_get(), kt);
-        break;
-    }
-    return (ssize_t) ktime_to_ns(kt);
+    // ktime_t kt;
+    // switch (mode) {
+    // case 0:  // iterative method
+    //     kt = ktime_get();
+    //     fib_sequence(*offset);
+    //     kt = ktime_sub(ktime_get(), kt);
+    //     break;
+    // case 1:  // fast-doubling method
+    //     kt = ktime_get();
+    //     fib_fast_dob(*offset);
+    //     kt = ktime_sub(ktime_get(), kt);
+    //     break;
+    // }
+    // return (ssize_t) ktime_to_ns(kt);
+    return 1;
 }
 
 static loff_t fib_device_lseek(struct file *file, loff_t offset, int orig)

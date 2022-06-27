@@ -67,7 +67,6 @@ int main()
         time_dif = res_t2 - res_t1;
         printf("%d %f %f %f \n", i, res_t1, res_t2, time_dif);
     }
-
     close(fd);
     return 0;
 }

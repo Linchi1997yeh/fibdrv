@@ -22,15 +22,15 @@ sudo bash -c "echo 1 > /sys/devices/system/cpu/intel_pstate/no_turbo"
 ###### single kernel vs user test
 make clean
 make
-make client_stat_measure
+# make client_stat_measure
 make client
 make unload
 make load
-# sudo ./client > out
-sudo taskset -c 7 ./client_stat_measure > plot
+sudo taskset -c 7 ./client > plot
+# sudo taskset -c 7 ./client_stat_measure > plot
 gnuplot scripts/plot-stats.gp
 make unload
-
+# make clean
 
 # restore the original system settings
 
