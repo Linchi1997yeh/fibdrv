@@ -1,50 +1,61 @@
-#define LENGTH 100
 /*
  * Struct that store big number
  */
-typedef struct bn {
-    unsigned int num[LENGTH];
+typedef struct _bn {
+    unsigned int *number;
+    unsigned int size;
+    int sign;
 } bn;
-
+/*
+ * output bn to decimal string
+ * Note: the returned string should be freed with the kfree()
+ */
+char *bn_to_string(const bn *src);
 
 /*
- * Add two bn and put the result in target bn.
+ * alloc a bn structure with the given size
+ * the value is initialized to +0
  */
-void bn_add(bn a, bn b, bn *sum);
+bn *bn_alloc(size_t size);
 
 /*
- * Substract two bn, a - b, and put the result in target bn.
+ * free entire bn data structure
+ * return 0 on success, -1 on error
  */
-void bn_dec(bn a, bn b, bn *diff);
+int bn_free(bn *src);
 
 /*
- * left shift serveral bits of  bn.
+ * copy the value from src to dest
+ * return 0 on success, -1 on error
  */
-void bn_lshift(bn a, int shift, bn *res);
-
-#if 0 
-/*
- * right shift several bits of bn.
- */
-void bn_rshift(bn a, int shift, bn *res);
-#endif
+int bn_cpy(bn *dest, bn *src);
 
 /*
- * print the bn in decimal form and return the whole string
+ * compare length
+ * return 1 if |a| > |b|
+ * return -1 if |a| < |b|
+ * return 0 if |a| = |b|
  */
-int bn_to_string(bn a, char str[]);
+int bn_cmp(const bn *a, const bn *b);
 
-/*
- * Multiply two bn by long multipication and put the sesult in target bn.
- */
-void bn_mul_2(bn a, bn b, bn *res);
+/* swap bn ptr */
+void bn_swap(bn *a, bn *b);
 
-/*
- * Use iteration to calculate Fib Sequence
- */
+/* left bit shift on bn (maximun shift 31) */
+void bn_lshift(bn *src, size_t shift);
 
-void bn_norm_fib(unsigned int n, bn *res);
-/*
- * Use Fast doubling to calculate Fib Sequence
- */
-void bn_fib(unsigned int n, bn *res);
+/* right bit shift on bn (maximun shift 31) */
+void bn_rshift(bn *src, size_t shift);
+
+/* c = a + b */
+void bn_add(const bn *a, const bn *b, bn *c);
+
+/* c = a - b */
+void bn_sub(const bn *a, const bn *b, bn *c);
+
+/* c = a x b */
+void bn_mult(const bn *a, const bn *b, bn *c);
+
+/* calc n-th Fibonacci number and save into dest */
+void bn_fib_fdoubling(bn *dest, unsigned int n);
+void bn_fib(bn *dest, unsigned int n);

@@ -96,6 +96,7 @@ static int fib_release(struct inode *inode, struct file *file)
     return 0;
 }
 
+#if 0
 /* calculate the fibonacci number at given offset */
 // static ssize_t fib_read(struct file *file,
 //                         char *buf,
@@ -139,7 +140,75 @@ static ssize_t fib_read(struct file *file,
     }
     return time;
 }
-
+#endif
+// static ssize_t fib_read(struct file *file,
+//                         char *buf,
+//                         size_t mode,
+//                         loff_t *offset)
+// {
+//     ktime_t kt;
+//     bn *fib = bn_alloc(1);
+//     s64 time;
+//     char *p;
+//     size_t len, left;
+//     switch (mode) {
+//     case 0:
+//         kt = ktime_get();
+//         bn_fib(fib, *offset);
+//         // bn_fib(fib, *offset);
+//         p = bn_to_string(fib);
+//         len = strlen(p) + 1;
+//         left = copy_to_user(buf, p, len);
+//         time = ktime_to_ns(ktime_sub(ktime_get(), kt));
+//         // printk(KERN_DEBUG "fib(%d): %s\n", (int) *offset, p);
+//         bn_free(fib);
+//         kfree(p);
+//         break;
+//     case 1:
+//         kt = ktime_get();
+//         bn_fib_fdoubling(fib, *offset);
+//         // bn_fib(fib, *offset);
+//         p = bn_to_string(fib);
+//         len = strlen(p) + 1;
+//         left = copy_to_user(buf, p, len);
+//         time = ktime_to_ns(ktime_sub(ktime_get(), kt));
+//         // printk(KERN_DEBUG "fib(%d): %s\n", (int) *offset, p);
+//         bn_free(fib);
+//         kfree(p);
+//         break;
+//     }
+//     return time;
+// }
+static ssize_t fib_read(struct file *file,
+                        char *buf,
+                        size_t size,
+                        loff_t *offset)
+{
+    bn *fib;
+    fib = bn_alloc(0);
+    // if (size < 1) {
+    //     fib = bn_alloc(0);
+    // } else {
+    //     fib = bn_alloc(size);
+    // }
+    ktime_t kt;
+    s64 time;
+    char *p;
+    size_t len;
+    // size_t left;
+    kt = ktime_get();
+    // bn_fib(fib, *offset);
+    bn_fib_fdoubling(fib, *offset);
+    p = bn_to_string(fib);
+    len = strlen(p) + 1;
+    // left = copy_to_user(buf, p, len);
+    copy_to_user(buf, p, len);
+    time = ktime_to_ns(ktime_sub(ktime_get(), kt));
+    // printk(KERN_DEBUG "fib(%d): %s\n", (int) *offset, p);
+    bn_free(fib);
+    kfree(p);
+    return time;
+}
 /* write operation is skipped */
 static ssize_t fib_write(struct file *file,
                          const char *buf,

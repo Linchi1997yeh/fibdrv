@@ -29,7 +29,7 @@ unload:
 	sudo rmmod $(TARGET_MODULE) || true >/dev/null
 
 client: client.c
-	$(CC) -o $@ $^
+	$(CC) -o $@ $^ -lm
 
 PRINTF = env printf
 PASS_COLOR = \e[32;01m
@@ -45,7 +45,10 @@ check: all
 	@scripts/verify.py
 
 client_test: client_test.c
-	$(CC) -o $@ $^
+	$(CC) -o $@ $^ -lm
 
 client_stat_measure: client_stat_measure.c
 	$(CC) -o $@ $^ -lm
+
+perf: fib.c
+	$(CC) -o $@ $^
